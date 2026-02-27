@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Grisawangi Digital Next-Gen - Kelompok SRZM</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- PeerJS untuk Remote Control -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Rajdhani', 'sans-serif'],
+                        scifi: ['Orbitron', 'sans-serif'],
+                    },
+                    colors: {
+                        netDark: '#020617',
+                        netBlue: '#1E3A8A',
+                        netLightBlue: '#3B82F6',
+                        netCyan: '#06B6D4',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #020617; color: #e2e8f0; overflow-x: hidden; touch-action: manipulation; font-family: 'Inter', sans-serif; }
+        .font-scifi { font-family: 'Orbitron', sans-serif; }
+        .font-tech { font-family: 'Rajdhani', sans-serif; }
+
+        .tech-gradient { background: linear-gradient(135deg, #1E3A8A 0%, #06B6D4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-panel { background: rgba(30, 58, 138, 0.08); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(6, 182, 212, 0.2); }
+        
+        @keyframes slideInUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes pptSlideNext { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes pptSlidePrev { from { transform: translateX(-100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes shrinkRemote { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.2); opacity: 0; pointer-events: none; } }
+        @keyframes spinCore { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulseGlowAI { 0%, 100% { box-shadow: 0 0 20px #06B6D4, inset 0 0 20px #06B6D4; } 50% { box-shadow: 0 0 50px #06B6D4, inset 0 0 40px #06B6D4; } }
+        @keyframes scanLine { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+
+        .animate-slide-up { animation: slideInUp 0.8s ease-out forwards; }
+        .slide-next { animation: pptSlideNext 0.6s ease-out forwards; }
+        .slide-prev { animation: pptSlidePrev 0.6s ease-out forwards; }
+        
+        #sidebar { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-open { transform: translateX(0) !important; }
+
+        .ppt-layout { display: grid; grid-template-rows: auto 1fr; height: 100vh; background: radial-gradient(circle at center, #0B1120 0%, #020617 100%); }
+        .ppt-content { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem; }
+        .ppt-image { max-height: 40vh; max-width: 80vw; object-fit: contain; border-radius: 1rem; border: 2px solid #3B82F6; margin: 1rem 0; box-shadow: 0 0 30px rgba(59, 130, 246, 0.4); background: rgba(0,0,0,0.4); padding: 10px;}
+        .no-scroll { overflow: hidden; }
+
+        /* Tirai Animasi */
+        #curtain-left, #curtain-right {
+            position: fixed; top: 0; width: 50%; height: 100vh;
+            background: #020617; z-index: 9999;
+            transition: transform 1.8s cubic-bezier(0.7, 0, 0.3, 1);
+            border: 2px solid #1E3A8A;
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(30, 58, 138, 0.08) 40px, rgba(30, 58, 138, 0.08) 80px);
+            box-shadow: inset 0 0 100px rgba(0,0,0,1);
+            transform: translateX(0);
+            pointer-events: none;
+        }
+        #curtain-left { left: 0; }
+        #curtain-right { right: 0; }
+        .curtain-open #curtain-left { transform: translateX(-100%); }
+        .curtain-open #curtain-right { transform: translateX(100%); }
+
+        .hardware-img-container { aspect-ratio: 3/4; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); border-radius: 1rem; border: 1px solid rgba(59, 130, 246, 0.3); padding: 1rem;}
+        .hardware-img-container img { height: 100%; width: 100%; object-fit: contain; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8)); }
+
+        /* Jarvis Center Animation Overlay */
+        #jarvis-init-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .jarvis-orb { position: relative; width: 250px; height: 250px; display: flex; align-items: center; justify-content: center; }
+        .jarvis-ring-1 { position: absolute; width: 100%; height: 100%; border: 4px solid transparent; border-top-color: #06B6D4; border-bottom-color: #06B6D4; border-radius: 50%; animation: spinCore 2s linear infinite; }
+        .jarvis-ring-2 { position: absolute; width: 80%; height: 80%; border: 2px dashed #3B82F6; border-radius: 50%; animation: spinCore 4s linear reverse infinite; }
+        .jarvis-ring-3 { position: absolute; width: 60%; height: 60%; border: 3px solid #06B6D4; border-radius: 50%; opacity: 0.3; animation: pulseGlowAI 1.5s infinite; }
+        .jarvis-core-orb { position: absolute; width: 30%; height: 30%; background: radial-gradient(circle, #06B6D4 0%, #1E3A8A 100%); border-radius: 50%; box-shadow: 0 0 30px #06B6D4; }
+
+        .jarvis-container { position: fixed; bottom: 24px; left: 24px; width: 60px; height: 60px; z-index: 999; display: none; align-items: center; justify-content: center; pointer-events: none;}
+        .jarvis-active { display: flex !important; }
+    </style>
+</head>
+<body class="antialiased selection:bg-cyan-500 selection:text-slate-950 text-slate-200">
+
+    <!-- Jarvis Activation Overlay -->
+    <div id="jarvis-init-overlay">
+        <div class="jarvis-orb">
+            <div class="jarvis-ring-1"></div>
+            <div class="jarvis-ring-2"></div>
+            <div class="jarvis-ring-3"></div>
+            <div class="jarvis-core-orb"></div>
+            <div class="absolute -bottom-16 text-cyan-400 font-scifi tracking-[0.5em] animate-pulse">SYSTEM INITIALIZING</div>
+        </div>
+    </div>
+
+    <!-- Multimedia Assets -->
+    <audio id="bg-music" loop><source src="https://audio.jukehost.co.uk/PSQ19fLpNf8BbW3qIwpqHfN0ithhBqww" type="audio/mpeg"></audio>
+    <audio id="sfx-curtain"><source src="https://audio.jukehost.co.uk/SXTeSteaEnBOsECrgwwdb3rCuke4oNF1" type="audio/mpeg"></audio>
+    <audio id="sfx-clap"><source src="https://audio.jukehost.co.uk/mMufSXxK2Wd2MPY9BCGBQyqVcaeY4D0A" type="audio/mpeg"></audio>
+    <audio id="sfx-wow"><source src="https://audio.jukehost.co.uk/ZEiOx4vjfhyrGpKlKamhutspUxBSR9V4" type="audio/mpeg"></audio>
+    <audio id="sfx-system-on"><source src="https://audio.jukehost.co.uk/DOB15SgYLp8AA8ot3d94FVEvjZE9b1t2" type="audio/mpeg"></audio>
+    <audio id="sfx-airis-resp"><source src="https://audio.jukehost.co.uk/iCPvhcIhNTzouENI79kbu6LakNAU4Ig8" type="audio/mpeg"></audio>
+    <audio id="sfx-ppt-cmd"><source src="https://audio.jukehost.co.uk/RvG4K0FW1Cz9LO4o5Wr32gH01yVSQJMI" type="audio/mpeg"></audio>
+
+    <div id="curtain-container" style="display: none;">
+        <div id="curtain-left"></div>
+        <div id="curtain-right"></div>
+    </div>
+
+    <div id="airis-indicator" class="jarvis-container">
+        <div class="jarvis-ring-1" style="border-width: 2px"></div>
+        <div class="jarvis-ring-3" style="width: 50%; height: 50%"></div>
+        <div class="absolute -top-8 text-[9px] font-scifi text-cyan-400 tracking-widest whitespace-nowrap drop-shadow-[0_0_5px_#06B6D4]">AIRIS ACTIVE</div>
+    </div>
+
+    <!-- PAGE 1: LOGIN -->
+    <section id="page-1" class="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-950">
+        <div class="absolute inset-0 opacity-40 bg-[url('https://files.catbox.moe/xk4fgf.jpg')] bg-cover bg-center bg-no-repeat"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950"></div>
+        
+        <div class="glass-panel p-8 md:p-12 rounded-3xl shadow-2xl z-10 w-[90%] max-w-md animate-slide-up border border-cyan-500/20 text-center relative bg-slate-950/50">
+            <img src="https://iili.io/qKhtL67.jpg" alt="[Logo Kelompok]" class="w-28 h-28 mx-auto rounded-full border-2 border-cyan-500 mb-6 object-cover shadow-[0_0_25px_rgba(6,182,212,0.5)]" onerror="this.src='https://files.catbox.moe/rl3705.jpg'">
+            <h1 class="font-scifi text-2xl font-bold mb-1 tech-gradient uppercase tracking-widest text-cyan-400">Portal Jaringan</h1>
+            <p class="text-[10px] text-cyan-400/60 mb-8 font-scifi tracking-[0.3em] uppercase text-center">Security Level 4 Authorization</p>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-6 text-left mb-6">
+                <div>
+                    <label class="block text-[10px] font-bold text-cyan-500 uppercase mb-2 font-scifi tracking-widest text-center">IDENTITAS SISTEM</label>
+                    <input type="text" id="input-name" required placeholder="MASUKKAN NAMA LENGKAP" class="w-full bg-black/40 border border-blue-900 rounded-xl px-4 py-4 text-white font-tech focus:border-cyan-400 outline-none transition-all tracking-widest uppercase text-center">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-cyan-500 uppercase mb-2 font-scifi tracking-widest text-center">GENDER</label>
+                    <select id="input-gender" required class="w-full bg-black/40 border border-blue-900 rounded-xl px-4 py-4 text-white font-tech appearance-none outline-none text-center tracking-widest">
+                        <option value="Laki-laki">LAKI-LAKI</option>
+                        <option value="Perempuan">PEREMPUAN</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-900 to-cyan-600 text-white font-scifi font-bold py-4 rounded-xl shadow-xl hover:shadow-cyan-500/20 transition-all uppercase tracking-widest text-xs active:scale-95">MASUK SISTEM</button>
+            </form>
+
+            <div class="flex items-center my-6">
+                <div class="flex-grow border-t border-cyan-500/30"></div>
+                <span class="mx-4 text-[10px] text-cyan-500 font-scifi uppercase tracking-widest">Sistem Remote</span>
+                <div class="flex-grow border-t border-cyan-500/30"></div>
+            </div>
+            
+            <button type="button" onclick="openRemoteSetup()" class="w-full bg-slate-900 border border-cyan-500/50 text-cyan-400 font-scifi font-bold py-4 rounded-xl flex justify-center items-center hover:bg-cyan-900/40 transition-all uppercase tracking-widest text-xs active:scale-95">
+                <i class="fas fa-mobile-screen mr-3 text-lg"></i> Tautkan HP
+            </button>
+        </div>
+    </section>
+
+    <!-- WELCOME POPUP -->
+    <div id="welcome-popup" class="fixed inset-0 bg-black/95 z-[60] hidden flex items-center justify-center backdrop-blur-lg">
+        <div class="glass-panel p-10 rounded-[2.5rem] max-w-lg w-[90%] text-center border border-cyan-500/40 relative animate-slide-up bg-slate-950/80">
+            <h2 class="font-scifi text-2xl font-bold mb-4 text-white uppercase tracking-widest">Sistem Siap, <span id="display-name" class="text-cyan-400"></span>!</h2>
+            <p class="text-gray-400 mb-10 leading-relaxed font-tech text-lg" id="welcome-desc">Infrastruktur virtual <b>SRZM (XI TJKT 2)</b> telah diinisialisasi. Anda dapat mengaktifkan asisten virtual dengan memanggil nama <b>Airis</b>.</p>
+            <button onclick="startArticle()" class="bg-cyan-500 text-slate-950 font-scifi font-bold py-4 px-16 rounded-full shadow-[0_0_30px_#06B6D4] uppercase tracking-widest hover:scale-105 transition-transform text-xs">Aktivasi Data</button>
+        </div>
+    </div>
+
+    <!-- MAIN PAGE (ARTIKEL LENGKAP) -->
+    <section id="page-2" class="hidden min-h-screen relative pb-20 bg-slate-950">
+        <nav class="fixed top-0 w-full z-40 glass-panel border-b border-white/5 bg-slate-950/80">
+            <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div class="cursor-pointer" onclick="triggerPPTMode()">
+                    <img src="https://iili.io/qKhtL67.jpg" alt="[Logo Kelompok]" class="h-12 w-12 rounded-full border border-cyan-500 hover:shadow-[0_0_15px_#06B6D4]" onerror="this.src='https://files.catbox.moe/rl3705.jpg'">
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <!-- Tombol Hasilkan Kode dipindah ke Halaman 2 -->
+                    <button id="btn-host-remote" onclick="initHostRemote(event)" class="hidden md:flex bg-green-500/10 border border-green-500/40 text-green-400 px-6 py-2 rounded-full items-center font-tech text-xs hover:bg-green-500/20 transition-all uppercase tracking-widest">
+                        <i class="fas fa-satellite-dish mr-2"></i> Hasilkan Kode
+                    </button>
+                    <!-- Display ID Remote -->
+                    <div id="host-id-display" class="hidden items-center bg-slate-950/90 border border-green-500/30 px-4 py-1.5 rounded-full shadow-2xl">
+                        <span class="text-[9px] text-green-400 font-scifi uppercase tracking-widest mr-2 mt-0.5">ID:</span>
+                        <span id="host-code-txt" class="font-scifi font-bold text-white text-lg tracking-widest"></span>
+                    </div>
+
+                    <button onclick="toggleSidebar()" class="text-cyan-400 p-2"><i class="fas fa-bars-staggered text-2xl"></i></button>
+                </div>
+            </div>
+        </nav>
+
+        <div id="sidebar" class="fixed inset-y-0 right-0 w-72 bg-slate-950/98 border-l border-cyan-500/30 z-50 transform translate-x-full flex flex-col shadow-2xl">
+            <div class="p-8 flex justify-between items-center border-b border-white/10">
+                <h3 class="font-scifi text-base font-bold text-cyan-400 uppercase tracking-widest">Sistem Nav</h3>
+                <button onclick="toggleSidebar()" class="text-2xl text-gray-600 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-8 flex flex-col space-y-8 font-tech text-base uppercase tracking-widest">
+                <a href="#pendahuluan" onclick="toggleSidebar()" class="text-gray-400 hover:text-cyan-400 transition-colors flex items-center"><i class="fas fa-bolt-lightning mr-4"></i> Strategi</a>
+                <a href="#hardware" onclick="toggleSidebar()" class="text-gray-400 hover:text-cyan-400 transition-colors flex items-center"><i class="fas fa-server mr-4"></i> Hardware</a>
+                <a href="#analisis" onclick="toggleSidebar()" class="text-gray-400 hover:text-cyan-400 transition-colors flex items-center"><i class="fas fa-sitemap mr-4"></i> Topologi</a>
+                <a href="#anggota" onclick="toggleSidebar()" class="text-gray-400 hover:text-cyan-400 transition-colors flex items-center"><i class="fas fa-users-gear mr-4"></i> Team</a>
+                <div class="border-t border-white/10 my-2 pt-6"></div>
+                <!-- Tombol Hasilkan Kode di Mobile -->
+                <button id="btn-host-remote-mobile" onclick="initHostRemote(event); toggleSidebar();" class="md:hidden text-green-400 flex items-center text-left hover:text-green-300 font-tech text-base uppercase tracking-widest"><i class="fas fa-satellite-dish mr-4 w-5"></i> Hasilkan Kode</button>
+            </div>
+        </div>
+
+        <main class="max-w-4xl mx-auto px-6 pt-32 space-y-24">
+            <div class="text-center">
+                <h1 class="font-scifi text-4xl md:text-6xl font-black mb-6 text-white uppercase leading-tight tracking-widest drop-shadow-[0_5px_15px_rgba(6,182,212,0.5)] text-cyan-400">Grisawangi <br> <span class="text-cyan-500">Digital Next-Gen</span></h1>
+                <p class="font-tech text-xl text-blue-300 mb-10 uppercase tracking-[0.4em]">Arsitektur Jaringan Modern SMK PGRI 1 Giri</p>
+                <div class="p-1 bg-gradient-to-b from-cyan-500/40 to-transparent rounded-[2.5rem]">
+                    <img src="https://files.catbox.moe/xk4fgf.jpg" alt="[SMK PGRI 1 Giri]" class="w-full h-auto rounded-[2.3rem] shadow-2xl">
+                </div>
+            </div>
+
+            <article id="pendahuluan" class="space-y-16 font-sans">
+                <section class="bg-blue-900/5 p-10 rounded-[2.5rem] border border-blue-900/30">
+                    <h2 class="text-2xl font-bold text-cyan-400 mb-6 font-scifi uppercase tracking-widest border-l-4 border-cyan-400 pl-6">Strategi & Tujuan Proyek</h2>
+                    <p class="leading-relaxed text-lg font-tech tracking-wide text-justify text-gray-300 mb-6">Proyek KKT (Konsentrasi Keahlian Teknik) Kelompok SRZM ini dirancang untuk menjawab tantangan transformasi digital di sekolah kami. Tujuan utamanya adalah merancang ekosistem jaringan yang cerdas, modern, dan super stabil untuk SMK PGRI 1 Giri. Dengan luas lahan mencapai 5.886 m², kami menerapkan struktur <b>Topologi Star Bertingkat (Pohon)</b>.</p>
+                    <p class="leading-relaxed text-lg font-tech tracking-wide text-justify text-gray-300">Strategi ini memastikan distribusi internet yang merata dan stabil di seluruh area kunci, mulai dari Laboratorium hingga Ruang Kelas. Jaringan utama berpusat di Ruang IT/Server sebagai root (pusat), yang mendistribusikan bandwidth melalui jalur backbone menuju setiap gedung blok. Sistem ini didukung penuh oleh ekosistem <b>Ruijie Cloud</b>, memungkinkan kami mengontrol seluruh perangkat jarak jauh hanya melalui satu aplikasi.</p>
+                </section>
+
+                <section id="hardware" class="space-y-16">
+                    <h2 class="text-3xl font-bold text-center text-cyan-500 font-scifi uppercase tracking-widest mb-12">Hardware & Spesifikasi Detail</h2>
+                    
+                    <!-- 1. Router 1200G Pro -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="space-y-5">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">1. Router Utama: Ruijie Reyee RG-EW1200G Pro</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify"><b>Spesifikasi:</b> Router kelas SOHO dengan standar 802.11ac Wave2 (Wi-Fi 5). Kecepatan total hingga 1267 Mbps (400 Mbps di 2.4GHz & 867 Mbps di 5GHz). Memiliki 1 port WAN Gigabit, 3 port LAN Gigabit, serta dukungan teknologi Reyee Mesh dan antena High-Performance.<br><br><b>Fungsi:</b> Bertindak sebagai router yang menyediakan koneksi internet berkecepatan tinggi untuk masing-masing kelas dengan kapasitas koneksi 30-64 perangkat sekaligus. Fitur Cloud Management memudahkan pemantauan harian.</p>
+                        </div>
+                        <div class="hardware-img-container shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://iili.io/qfUCgDJ.png" alt="[Router 1200G Pro]">
+                        </div>
+                    </div>
+
+                    <!-- 2. Server -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="hardware-img-container md:order-1 order-2 shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://files.catbox.moe/mfe5de.png" alt="[Server Lenovo]">
+                        </div>
+                        <div class="md:order-2 order-1 space-y-5 text-right">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">2. Server: Lenovo ThinkSystem ST250 V2</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify" style="text-align-last: right;"><b>Spesifikasi:</b> Intel Xeon E-2324G (4 Core, 3.10-4.60 GHz), RAM bawaan 8GB DDR4 ECC (sangat disarankan di-upgrade menjadi 16GB atau 32GB agar performa maksimal), Storage 1.2TB SAS HDD 10k RPM, PSU 550W.<br><br><b>Fungsi:</b> Server tower andalan untuk bisnis menengah. Ideal sebagai "Otak Data" untuk ujian CBT, database skala menengah, dan penyimpanan data Dapodik sekolah dengan keandalan nonstop 24/7.</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Switch 24 Port -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="space-y-5">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">3. Switch Lab: Ruijie RG-ES124G-L</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify"><b>Spesifikasi:</b> Switch Unmanaged 24 Port RJ45 Full Gigabit (10/100/1000 Mbps). Fitur Non-PoE, desain casing metal (pembuangan panas optimal), dan hemat energi. Plug & Play tanpa setting rumit.<br><br><b>Fungsi:</b> Switch ini dikhususkan untuk distribusi jaringan kabel dalam jumlah masif di ruang Lab Komputer.</p>
+                        </div>
+                        <div class="hardware-img-container shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://files.catbox.moe/m9u9sl.png" alt="[Switch 24 Port]">
+                        </div>
+                    </div>
+
+                    <!-- 4. AP -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="hardware-img-container md:order-1 order-2 shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://files.catbox.moe/jdijiu.png" alt="[Access Point Ruijie]">
+                        </div>
+                        <div class="md:order-2 order-1 space-y-5 text-right">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">4. Access Point: Reyee RG-RAP2200(F)</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify" style="text-align-last: right;"><b>Spesifikasi:</b> Dual-Band Wi-Fi 5 (802.11ac Wave 2), 1267 Mbps, 110 user. Mendukung teknologi SON dan Seamless Roaming tanpa putus.<br><br><b>Penempatan:</b> Berbeda dengan router kelas, Access Point ini difokuskan untuk mendistribusikan sinyal Wi-Fi di area yang luas dan terbuka seperti kantin, lapangan, atau aula sekolah guna menangani kepadatan pengguna secara merata.</p>
+                        </div>
+                    </div>
+
+                    <!-- 5. Switch 8 Port -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="space-y-5">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">5. Switch Utama/Distribusi: Ruijie RG-ES208GC</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify"><b>Spesifikasi:</b> Smart Managed Switch 8 Port Full Gigabit. Manajemen berbasis cloud penuh, mendukung konfigurasi VLAN secara remote.<br><br><b>Fungsi Krusial:</b> Digunakan sebagai switch distribusi yang menghubungkan antar tiga ruangan kelas. Selain itu, switch ini sangat penting untuk mendampingi Switch 24-Port di Laboratorium 1-6. Dengan 30 PC di lab, formasi (24+8) port mampu melayani 32 user secara sempurna tanpa bottleneck atau error koneksi.</p>
+                        </div>
+                        <div class="hardware-img-container shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://files.catbox.moe/vw8f2h.jpg" alt="[Switch 8 Port]">
+                        </div>
+                    </div>
+
+                    <!-- 6. Router 300N -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="hardware-img-container md:order-1 order-2 shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://files.catbox.moe/9lrdqs.png" alt="[Router 300N]">
+                        </div>
+                        <div class="md:order-2 order-1 space-y-5 text-right">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">6. Router Sedang: Ruijie RG-EW300N</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify" style="text-align-last: right;"><b>Spesifikasi:</b> Router kelas ekonomis dengan kecepatan 300 Mbps (2.4GHz), 2 antena eksternal, dan fitur fungsi Smart Router dengan dukungan DC UPS (bisa dihidupkan dengan powerbank saat mati listrik).<br><br><b>Fungsi:</b> Pilihan tepat untuk area privasi yang tidak terlalu luas atau berpenumpang sedikit, contohnya seperti ruang Komite Kesiswaan dan Bank Mini sekolah.</p>
+                        </div>
+                    </div>
+
+                    <!-- 7. Kabel LAN -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center bg-black/40 p-10 rounded-[2.5rem] border border-white/5">
+                        <div class="space-y-5">
+                            <h3 class="text-xl font-bold text-white font-scifi uppercase tracking-wider text-cyan-300">7. Kabel LAN: Belden Cat6 UTP (USA)</h3>
+                            <p class="text-sm font-tech text-gray-400 leading-relaxed text-justify"><b>Spesifikasi:</b> Kabel premium standar industri, transmisi data hingga 1 Gbps (1000 Mbps) di frekuensi 250 MHz. Material Solid Bare Copper (tembaga murni) dengan pemisah crosstalk. 1 roll berisi 305 meter.<br><br><b>Fungsi:</b> Dengan estimasi luas sekolah 0.6 hektar, kami menggunakan 5 Roll kabel. Kualitas tembaga murni sangat diandalkan untuk ditarik jauh antar gedung melewati pipa conduit, tanpa takut kehilangan (loss) kualitas kecepatan Gigabit.</p>
+                        </div>
+                        <div class="hardware-img-container shadow-[0_0_40px_rgba(59,130,246,0.2)]">
+                            <img src="https://files.catbox.moe/jd0rz8.png" alt="[Kabel Belden Cat6]">
+                        </div>
+                    </div>
+                </section>
+
+                <section id="analisis" class="bg-gradient-to-br from-blue-900/30 to-black p-12 rounded-[3rem] border-2 border-cyan-500/20 shadow-2xl">
+                    <h2 class="text-3xl font-bold text-cyan-400 mb-10 uppercase font-scifi tracking-widest text-center">Kesimpulan Proyek KKT</h2>
+                    <p class="font-tech text-xl text-gray-300 text-center leading-relaxed">Anggaran dan pemilihan perangkat ini telah disusun dengan sangat matang. Dengan menggunakan satu ekosistem (Ruijie/Reyee), seluruh pengelolaan jaringan bisa dilakukan terpusat melalui satu aplikasi. Implementasi Topologi Pohon dengan memusatkan tenaga data di Core Level dan membaginya secara cerdas ke setiap blok melalui switch distribusi menjamin kestabilan internet SMK PGRI 1 Giri meski diakses oleh ribuan siswa.</p>
+                </section>
+
+                <div class="flex justify-center pt-8">
+                    <a href="https://drive.google.com/drive/folders/1JwpSjeyVG_GMqRRWiU4mdi4nEHExH5KJ" target="_blank" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-scifi font-bold py-4 px-10 rounded-full shadow-[0_0_30px_rgba(6,182,212,0.6)] uppercase tracking-widest transition-all hover:scale-105 flex items-center">
+                        <i class="fas fa-folder-open text-xl mr-3"></i> Lihat Hasil Kerja
+                    </a>
+                </div>
+            </article>
+
+            <section id="anggota" class="pt-20 border-t border-cyan-500/10">
+                <div class="text-center mb-16 uppercase tracking-[0.4em]"><h2 class="font-scifi text-3xl font-bold text-white">Tim Pengembang SRZM</h2></div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-12">
+                    <div class="text-center group"><img src="https://files.catbox.moe/fxdvji.jpg" alt="[Agus Sastro]" class="w-36 h-36 mx-auto rounded-full border-4 border-cyan-500 object-cover mb-4 shadow-2xl transition-transform hover:scale-110 duration-500"><h4 class="text-sm font-bold font-scifi uppercase text-white">Agus Sastro N.</h4></div>
+                    <div class="text-center group"><img src="https://files.catbox.moe/vj14pg.jpeg" alt="[Riski Azizi]" class="w-36 h-36 mx-auto rounded-full border-4 border-cyan-500 object-cover mb-4 shadow-2xl transition-transform hover:scale-110 duration-500"><h4 class="text-sm font-bold font-scifi uppercase text-white">Riski Azizi</h4></div>
+                    <div class="text-center group"><img src="https://files.catbox.moe/lo4uj6.jpg" alt="[Rip-an Irfani]" class="w-36 h-36 mx-auto rounded-full border-4 border-cyan-500 object-cover mb-4 shadow-2xl transition-transform hover:scale-110 duration-500"><h4 class="text-sm font-bold font-scifi uppercase text-white">Rip-an Irfani</h4></div>
+                    <div class="text-center group"><img src="https://files.catbox.moe/6hassq.jpg" alt="[Zidan Rouf]" class="w-36 h-36 mx-auto rounded-full border-4 border-cyan-500 object-cover mb-4 shadow-2xl transition-transform hover:scale-110 duration-500"><h4 class="text-sm font-bold font-scifi uppercase text-white">Zidan Rouf</h4></div>
+                </div>
+            </section>
+        </main>
+
+        <button id="music-btn-main" onclick="toggleMusic(null)" class="fixed bottom-6 right-6 w-14 h-14 bg-slate-950 border-2 border-cyan-500 rounded-full flex items-center justify-center text-cyan-500 z-40 shadow-xl hover:scale-110 transition-transform cursor-pointer"><i class="fas fa-play text-xl" id="music-icon-main"></i></button>
+    </section>
+
+    <!-- OTENTIKASI MODAL -->
+    <div id="code-prompt-overlay" class="fixed inset-0 bg-black/98 z-[60] hidden flex items-center justify-center backdrop-blur-2xl">
+        <div class="glass-panel p-12 rounded-[3rem] text-center border border-cyan-500/30 max-w-sm w-full animate-slide-up bg-slate-950/90">
+            <i class="fas fa-fingerprint text-5xl text-cyan-400 mb-8 drop-shadow-[0_0_10px_cyan]"></i>
+            <h3 class="font-scifi text-2xl text-white mb-2 uppercase tracking-widest text-center">ADMIN ACCESS</h3>
+            
+            <div id="auth-code-section">
+                <input type="password" id="access-code" class="w-full bg-black/60 border-2 border-cyan-500/50 rounded-2xl py-4 text-center text-white mb-6 uppercase tracking-[0.6em] outline-none focus:border-cyan-400 font-scifi" placeholder="KODE">
+                <button onclick="validateCode()" class="w-full py-5 bg-cyan-500 text-slate-950 font-scifi font-bold rounded-2xl uppercase tracking-widest shadow-lg active:scale-95 transition-all text-xs">Verifikasi</button>
+            </div>
+
+            <div id="face-id-option" class="hidden mt-8 pt-8 border-t border-white/5">
+                <button onclick="startFaceID()" class="w-full py-4 border border-cyan-500 text-cyan-500 hover:bg-cyan-500 hover:text-slate-950 font-scifi font-bold rounded-2xl uppercase tracking-widest transition-all flex justify-center items-center text-[10px]"><i class="fas fa-expand mr-3"></i> Face ID Scan</button>
+            </div>
+
+            <button onclick="closeCodePrompt()" class="mt-10 text-gray-700 text-[10px] uppercase tracking-[0.3em] hover:text-white transition-colors font-scifi">Batal</button>
+        </div>
+    </div>
+
+    <!-- FACE ID SCANNER -->
+    <div id="face-id-modal" class="fixed inset-0 bg-black z-[65] hidden flex flex-col items-center justify-center">
+        <h2 class="font-scifi text-2xl text-cyan-400 uppercase tracking-widest mb-12 animate-pulse">Scanning Biometrics...</h2>
+        <div class="relative w-72 h-72 md:w-96 md:h-96 rounded-full overflow-hidden border-4 border-cyan-500 shadow-[0_0_80px_rgba(6,182,212,0.4)] bg-black">
+            <video id="face-video" class="w-full h-full object-cover opacity-60" autoplay playsinline muted></video>
+            <div class="absolute left-0 w-full h-1 bg-cyan-300 shadow-[0_0_20px_#06B6D4]" style="animation: scanLine 2s linear infinite;"></div>
+        </div>
+        <p class="mt-10 text-gray-500 font-tech text-sm tracking-widest uppercase">MENCARI IDENTITAS ANGGOTA...</p>
+    </div>
+
+    <!-- PPT WELCOME SCREEN -->
+    <div id="ppt-welcome" class="fixed inset-0 bg-black z-[70] hidden flex flex-col items-center justify-center">
+        <h1 class="font-scifi text-3xl md:text-5xl text-white mb-12 uppercase tracking-[0.4em] text-center px-6">Akses Diberikan <br> <span id="admin-name" class="text-cyan-400 font-bold block mt-6 drop-shadow-[0_0_15px_cyan]"></span></h1>
+        <img id="admin-photo" src="" class="w-64 h-64 rounded-full border-4 border-cyan-400 object-cover shadow-[0_0_100px_#06B6D4] transition-all duration-1000 scale-0 opacity-0" id="admin-img-box">
+    </div>
+
+    <!-- VIDEO INTRO -->
+    <div id="video-container" class="fixed inset-0 bg-black z-[80] hidden flex items-center justify-center">
+        <video id="intro-video" class="w-full h-full object-cover" playsinline><source src="https://files.catbox.moe/15cqk3.mp4" type="video/mp4"></video>
+        <button onclick="skipVideo()" class="absolute bottom-10 right-10 text-white bg-white/5 border border-white/10 px-8 py-3 rounded-full backdrop-blur-md uppercase font-scifi text-[9px] tracking-widest hover:bg-white/10 transition-all z-[90]">Skip Intro</button>
+    </div>
+
+    <!-- PPT CONTAINER -->
+    <div id="ppt-container" class="fixed inset-0 z-[90] hidden ppt-layout select-none" onclick="pptScreenClick()">
+        <div id="ppt-slide-area" class="ppt-content w-full h-full relative overflow-hidden"></div>
+        <button onclick="exitPPTMode()" class="absolute top-6 right-6 text-white bg-red-600/10 hover:bg-red-600 border border-red-500/40 w-12 h-12 flex items-center justify-center rounded-full z-[100] transition-all"><i class="fas fa-power-off text-lg"></i></button>
+
+        <!-- Area Klik Layar Navigasi Manual -->
+        <div class="absolute inset-y-0 left-0 w-1/4 z-[80] cursor-pointer" onclick="prevSlide(event)"></div>
+        <div class="absolute inset-y-0 right-0 w-1/4 z-[80] cursor-pointer" onclick="nextSlide(event)"></div>
+    </div>
+
+    <!-- REMOTE HP UI -->
+    <div id="remote-setup-page" class="fixed inset-0 bg-slate-950 z-[200] hidden flex flex-col items-center justify-center p-8 text-center">
+        <div class="absolute inset-0 bg-black/95"></div>
+        <div class="z-10 w-full max-w-sm flex flex-col items-center animate-slide-up">
+            <i class="fas fa-signal-perfect text-6xl text-cyan-400 mb-10 drop-shadow-[0_0_20px_cyan]"></i>
+            <h2 class="font-scifi text-2xl text-white mb-2 uppercase tracking-[0.3em]">Sync Remote</h2>
+            <div class="w-full flex items-center bg-black/60 border-2 border-cyan-500/30 rounded-3xl px-8 py-5 mb-10 mt-10">
+                <span class="text-cyan-500 font-bold text-2xl mr-2 font-scifi">SRZM-</span>
+                <input type="number" id="remote-input-digits" class="w-full bg-transparent text-white text-3xl font-bold tracking-[0.4em] outline-none font-scifi" placeholder="XXXX">
+            </div>
+            <button onclick="connectToHost()" class="w-full bg-cyan-500 text-slate-950 font-scifi font-bold py-5 rounded-[2rem] text-lg shadow-[0_0_30px_#06B6D4] uppercase tracking-widest">Hubungkan</button>
+            <button onclick="closeRemoteSetup()" class="mt-12 text-gray-700 uppercase text-[9px] font-scifi tracking-[0.5em] hover:text-white transition-colors">Abort</button>
+        </div>
+    </div>
+
+    <div id="remote-controller-page" class="fixed inset-0 bg-slate-950 z-[210] hidden flex flex-col p-6 select-none border-[8px] border-black rounded-3xl">
+        <div class="flex justify-between items-center mb-10">
+            <div class="flex items-center text-cyan-400 text-[9px] font-scifi tracking-[0.3em]"><span class="w-2 h-2 bg-cyan-400 rounded-full mr-2 animate-pulse shadow-[0_0_10px_cyan]"></span>STATION LINKED</div>
+            <button id="btn-remote-mic" onclick="toggleRemoteMic()" class="bg-purple-600/10 border border-purple-500/40 text-purple-400 px-4 py-2 rounded-full font-tech text-[10px] flex items-center uppercase tracking-widest active:bg-purple-600 transition-all"><i class="fas fa-microphone mr-2"></i> AIRIS</button>
+        </div>
+        
+        <div class="flex-1 flex flex-col gap-5 mb-8 transition-all duration-700" id="nav-container">
+            <button onclick="sendCmd('PREV')" class="flex-1 bg-white/5 border-2 border-white/10 rounded-[3rem] flex items-center justify-center remote-btn text-white/30 active:text-cyan-400 transition-all"><i class="fas fa-chevron-up text-7xl"></i></button>
+            <button onclick="sendCmd('NEXT')" class="flex-1 bg-white/5 border-2 border-white/10 rounded-[3rem] flex items-center justify-center remote-btn text-cyan-500 active:text-white active:bg-cyan-500 transition-all"><i class="fas fa-chevron-down text-7xl"></i></button>
+        </div>
+
+        <div class="flex justify-center mb-6">
+            <button onclick="toggleSpecialButtons()" class="w-24 h-24 bg-slate-950 border-[3px] border-cyan-500 rounded-[2rem] flex items-center justify-center text-cyan-400 font-scifi text-5xl font-black shadow-[0_0_40px_#06B6D4] active:scale-90 transition-all">S</button>
+        </div>
+
+        <div id="special-functions" class="grid grid-cols-2 gap-4 h-0 opacity-0 overflow-hidden transition-all duration-700">
+            <button onclick="sendCmd('TIRAI')" class="bg-blue-900/10 border border-blue-500/30 rounded-[2rem] py-6 remote-btn text-blue-400"><i class="fas fa-scroll text-3xl mb-3"></i><span class="text-[9px] font-tech font-bold uppercase">Tirai</span></button>
+            <button onclick="sendCmd('CLAP')" class="bg-yellow-900/10 border border-yellow-500/30 rounded-[2rem] py-6 remote-btn text-yellow-400"><i class="fas fa-hands-clapping text-3xl mb-3"></i><span class="text-[9px] font-tech font-bold uppercase">Clap</span></button>
+            <button onclick="sendCmd('WOW')" class="bg-pink-900/10 border border-pink-500/30 rounded-[2rem] py-6 remote-btn text-pink-400"><i class="fas fa-face-grin-stars text-3xl mb-3"></i><span class="text-[9px] font-tech font-bold uppercase">Wow</span></button>
+            <button onclick="sendCmd('BGM')" class="bg-cyan-900/10 border border-cyan-500/30 rounded-[2rem] py-6 remote-btn text-cyan-400"><i class="fas fa-music text-3xl mb-3"></i><span class="text-[9px] font-tech font-bold uppercase">BGM</span></button>
+        </div>
+    </div>
+
+    <script>
+        const validCodes = {
+            'STRN1788': { name: 'Agus Sastro Negoro', photo: 'https://files.catbox.moe/fxdvji.jpg', keywords: ['sastro', 'agus', 'negoro'] },
+            'AZIZI2009': { name: 'Moch Riski Azizi', photo: 'https://files.catbox.moe/vj14pg.jpeg', keywords: ['riski', 'azizi', 'moch'] },
+            'ZIDAN123': { name: 'Zidan Rouf', photo: 'https://files.catbox.moe/6hassq.jpg', keywords: ['zidan', 'rouf'] },
+            'IRFAN234': { name: 'Moh Rip-an Irfani', photo: 'https://files.catbox.moe/lo4uj6.jpg', keywords: ['rip', 'irfan', 'irfani'] }
+        };
+
+        const groupKeywords = ['sastro', 'agus', 'riski', 'azizi', 'rip', 'irfan', 'zidan', 'rouf', 'negoro', 'moch', 'irfani'];
+        
+        let isMusicPlaying = false, isCurtainClosed = true, currentSlide = 0, logoClicks = 0;
+        let peer = null, conn = null, isSpecialActive = false, loginName = "", isGroupMember = false, cameraStream = null;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null, isListening = false, isRemoteMode = false, isRecognitionStarted = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'id-ID';
+            recognition.onstart = () => { isRecognitionStarted = true; console.log("Airis Engine Started"); };
+            recognition.onresult = (e) => {
+                const text = e.results[e.results.length - 1][0].transcript.toLowerCase();
+                console.log("Airis Mendengar: ", text);
+                if (isRemoteMode && conn && conn.open) { conn.send("VOICE:" + text); return; }
+                processVoiceCommand(text);
+            };
+            recognition.onend = () => { 
+                isRecognitionStarted = false; 
+                if(!isRemoteMode && isListening) setTimeout(() => { try { if(!isRecognitionStarted) recognition.start(); } catch(e){} }, 500); 
+            };
+        }
+
+        function toggleMicPC(state) {
+            if(!recognition) return;
+            isListening = state;
+            if(state) { try { if(!isRecognitionStarted) recognition.start(); } catch(e){} }
+            else { try { recognition.stop(); } catch(e){} }
+        }
+
+        function triggerJarvisEffect(duration = 18000) {
+            const overlay = document.getElementById('jarvis-init-overlay');
+            overlay.style.display = 'flex';
+            document.getElementById('sfx-system-on').play().catch(()=>{});
+            setTimeout(() => { overlay.style.display = 'none'; }, duration);
+        }
+
+        function showJarvisIndicator(duration = 2000) {
+            const ind = document.getElementById('airis-indicator');
+            ind.classList.add('jarvis-active');
+            setTimeout(() => { ind.classList.remove('jarvis-active'); }, duration);
+        }
+
+        function processVoiceCommand(text) {
+            if (text.includes('system on') || text.includes('sistem on') || text.includes('sistem nyala')) { triggerJarvisEffect(18000); }
+            else if (text.includes('hai airis') || text.includes('hey airis') || text.includes('airis')) { document.getElementById('sfx-airis-resp').play().catch(()=>{}); showJarvisIndicator(3000); }
+            else if (text.includes('presentasi mode') || text.includes('mode presentasi')) { document.getElementById('sfx-ppt-cmd').play().catch(()=>{}); forceFaceIDAccess(); }
+            else if (text.includes('selanjutnya') || text.includes('lanjut')) { nextSlide(); showJarvisIndicator(1000); }
+            else if (text.includes('sebelumnya') || text.includes('kembali')) { prevSlide(); showJarvisIndicator(1000); }
+            else if (text.includes('buka tirai')) { if(isCurtainClosed) toggleCurtainLaptop(); }
+            else if (text.includes('tutup tirai')) { if(!isCurtainClosed) toggleCurtainLaptop(); }
+            else if (text.includes('putar musik') || text.includes('mainkan musik') || text.includes('putar audio')) { toggleMusic(null, true); showJarvisIndicator(1000); }
+            else if (text.includes('hentikan musik') || text.includes('matikan musik') || text.includes('pause musik') || text.includes('jeda musik')) { toggleMusic(null, false); showJarvisIndicator(1000); }
+            else if (text.includes('tepuk tangan') || text.includes('beri tepuk tangan')) { document.getElementById('sfx-clap').play().catch(()=>{}); showJarvisIndicator(1000); }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            loginName = document.getElementById('input-name').value;
+            document.getElementById('display-name').textContent = loginName;
+            
+            isGroupMember = groupKeywords.some(kw => loginName.toLowerCase().includes(kw));
+            
+            if (isGroupMember) {
+                document.getElementById('welcome-desc').innerHTML = "Infrastruktur virtual <b>SRZM (XI TJKT 2)</b> telah diinisialisasi. Mikrofon Anda sekarang aktif untuk perintah suara <b>Airis</b>.";
+                try { 
+                    await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); 
+                    toggleMicPC(true); 
+                } catch(err){ 
+                    console.log("Izin ditolak atau hardware tidak ditemukan.");
+                    toggleMicPC(true); 
+                }
+            } else {
+                document.getElementById('welcome-desc').innerHTML = "Infrastruktur virtual <b>SMK PGRI 1 Giri</b> telah diinisialisasi. Selamat menjelajah mode Pengamat.";
+            }
+            
+            document.getElementById('page-1').classList.add('hidden');
+            document.getElementById('welcome-popup').classList.remove('hidden');
+        }
+
+        function startArticle() {
+            document.getElementById('welcome-popup').classList.add('hidden');
+            document.getElementById('page-2').classList.remove('hidden');
+        }
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-open'); }
+
+        function toggleMusic(e = null, forceState = null) {
+            const m = document.getElementById('bg-music'), icon = document.getElementById('music-icon-main');
+            if(!m) return;
+            try {
+                if (forceState === true) {
+                    m.play(); isMusicPlaying = true; icon.classList.replace('fa-play', 'fa-pause');
+                } else if (forceState === false) {
+                    m.pause(); isMusicPlaying = false; icon.classList.replace('fa-pause', 'fa-play');
+                } else {
+                    if(isMusicPlaying) { m.pause(); isMusicPlaying = false; icon.classList.replace('fa-pause', 'fa-play'); }
+                    else { m.play(); isMusicPlaying = true; icon.classList.replace('fa-play', 'fa-pause'); }
+                }
+            } catch(err){ console.log("Audio Error:", err); }
+        }
+
+        function triggerPPTMode() {
+            logoClicks++;
+            if(logoClicks >= 3) { 
+                document.getElementById('code-prompt-overlay').classList.remove('hidden'); 
+                document.getElementById('face-id-option').classList.toggle('hidden', !isGroupMember);
+                logoClicks = 0; 
+            }
+            setTimeout(() => { logoClicks = 0; }, 2000);
+        }
+
+        function validateCode() {
+            const c = document.getElementById('access-code').value.toUpperCase().trim();
+            if(validCodes[c]) { document.getElementById('code-prompt-overlay').classList.add('hidden'); executePPTEntry(validCodes[c].name, validCodes[c].photo); }
+        }
+
+        function startFaceID() {
+            document.getElementById('code-prompt-overlay').classList.add('hidden');
+            const modal = document.getElementById('face-id-modal'), video = document.getElementById('face-video');
+            modal.classList.remove('hidden');
+            navigator.mediaDevices.getUserMedia({video: true}).then(s => { cameraStream = s; video.srcObject = s; });
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                let photoUrl = 'https://files.catbox.moe/fxdvji.jpg', displayName = loginName || "Authorized Admin";
+                const lowerInput = loginName.toLowerCase();
+                for(let key in validCodes) { if(validCodes[key].keywords.some(kw => lowerInput.includes(kw))) { photoUrl = validCodes[key].photo; displayName = validCodes[key].name; break; } }
+                if(cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+                executePPTEntry(displayName, photoUrl); 
+            }, 3000);
+        }
+
+        function forceFaceIDAccess() {
+            if(!isGroupMember) return; 
+
+            document.getElementById('page-1').classList.add('hidden'); document.getElementById('welcome-popup').classList.add('hidden');
+            document.getElementById('page-2').classList.add('hidden'); document.getElementById('code-prompt-overlay').classList.add('hidden');
+            startFaceID();
+        }
+
+        function executePPTEntry(name, photo) {
+            document.getElementById('page-2').classList.add('hidden'); document.body.classList.add('no-scroll'); toggleMusic(null, false);
+            try { if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{}); } catch(e){}
+            const w = document.getElementById('ppt-welcome'), adminImg = document.getElementById('admin-photo');
+            document.getElementById('admin-name').textContent = name; adminImg.src = photo;
+            w.classList.remove('hidden');
+            setTimeout(() => { adminImg.style.transform = 'scale(1)'; adminImg.style.opacity = '1'; }, 100);
+            setTimeout(() => { w.classList.add('hidden'); startVideo(); }, 4000);
+        }
+
+        function startVideo() {
+            const v = document.getElementById('video-container'), vid = document.getElementById('intro-video');
+            v.classList.remove('hidden'); vid.play().catch(() => skipVideo()); vid.onended = () => skipVideo();
+        }
+
+        function skipVideo() {
+            document.getElementById('video-container').classList.add('hidden'); document.getElementById('intro-video').pause();
+            const ppt = document.getElementById('ppt-container'); ppt.classList.remove('hidden');
+            document.getElementById('curtain-container').style.display = 'block';
+            ppt.appendChild(document.getElementById('curtain-left')); ppt.appendChild(document.getElementById('curtain-right'));
+            document.body.classList.remove('curtain-open'); renderSlide();
+        }
+
+        const pptSlides = [
+            `<h1 class="font-scifi text-6xl md:text-7xl font-bold text-white mb-6 uppercase tracking-widest drop-shadow-[0_0_20px_cyan]">Grisawangi Next-Gen</h1><p class="text-2xl text-cyan-400 uppercase tracking-[0.5em] font-tech mb-10">Strategi Infrastruktur Digital</p><img src="https://iili.io/qKhtL67.jpg" class="w-48 h-48 rounded-full border-4 border-cyan-400 shadow-[0_0_50px_#06B6D4]"><p class="mt-12 text-gray-400 font-tech uppercase tracking-widest text-xs">Oleh Tim SRZM - XI TJKT 2</p>`,
+            
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-10 uppercase font-scifi tracking-widest border-b-2 border-cyan-500/30 pb-4">Tujuan Proyek KKT</h2><p class="text-2xl leading-relaxed text-gray-300 font-tech text-justify px-12">Tujuan utama dari pembuatan tugas infrastruktur digital ini adalah merancang ekosistem jaringan yang cerdas dan stabil untuk SMK PGRI 1 Giri. Kami berfokus pada kemudahan pengelolaan berbasis Cloud dan penyediaan bandwidth Gigabit yang merata di seluruh area sekolah seluas 5.886 m² guna mendukung aktivitas digital siswa dan guru di masa depan.</p>`,
+            
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-8 uppercase font-scifi tracking-widest">1. Router Utama 1200G Pro</h2><div class="flex gap-12 items-center px-12"><img src="https://iili.io/qfUCgDJ.png" class="ppt-image"><p class="text-xl leading-relaxed text-gray-300 text-justify font-tech">Router performa tinggi ini difungsikan sebagai penyedia koneksi internet untuk masing-masing kelas. Dengan kecepatan mencapai 1267 Mbps berteknologi Wi-Fi 5 Wave 2, router ini memastikan kelancaran lalu lintas data dan mampu menangani puluhan perangkat siswa secara stabil di dalam kelas.</p></div>`,
+            
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-8 uppercase font-scifi tracking-widest">2. Server Lenovo ST250 V2</h2><div class="flex gap-12 items-center px-12"><p class="text-xl leading-relaxed text-gray-300 text-justify font-tech">Server tower andalan yang dipersenjatai Intel Xeon dan RAM ECC. Perangkat ini sangat esensial bertindak sebagai Core penyimpanan data Dapodik dan pangkalan ujian CBT. Kami merekomendasikan penambahan RAM hingga 32GB agar server siap menangani akses dari ribuan siswa secara bersamaan selama ujian semester.</p><img src="https://files.catbox.moe/mfe5de.png" class="ppt-image"></div>`,
+            
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-8 uppercase font-scifi tracking-widest">3. Strategi Switch Lab (24+8)</h2><div class="flex gap-12 items-center px-12"><img src="https://files.catbox.moe/m9u9sl.png" class="ppt-image"><p class="text-xl leading-relaxed text-gray-300 text-justify font-tech">Khusus untuk 6 Lab Komputer, setiap lab berisi 30 PC. Mengatasi hal tersebut, kami mengimplementasikan dua switch: RG-ES124G-L (24 Port) didampingi RG-ES208GC (8 Port). Kolaborasi port 24+8 ini memastikan 32 pengguna dalam satu lab terlayani kecepatan penuh Gigabit saat merender tugas atau CBT ujian praktik.</p></div>`,
+            
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-8 uppercase font-scifi tracking-widest">4. Access Point RAP2200(F)</h2><div class="flex gap-12 items-center px-12"><p class="text-xl leading-relaxed text-gray-300 text-justify font-tech">Kami memposisikan AP plafon Dual-Band berkecepatan 1267 Mbps ini secara strategis untuk area publik. Perangkat ini ditugaskan mendistribusikan sinyal Wi-Fi di lokasi yang luas seperti kantin, lapangan, dan aula. Kapasitas 110 pengguna konkuren menjamin koneksi tak terputus di area padat.</p><img src="https://files.catbox.moe/jdijiu.png" class="ppt-image"></div>`,
+
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-8 uppercase font-scifi tracking-widest">5. Switch Distribusi & Router Sedang</h2><div class="flex gap-12 items-center px-12"><img src="https://files.catbox.moe/vw8f2h.jpg" class="ppt-image"><p class="text-xl leading-relaxed text-gray-300 text-justify font-tech">Sistem kami memasang 1 Switch RG-ES208GC tiap jarak 3 ruang kelas sebagai backbone pencabang. Untuk area terbatas dan privat seperti Ruang Guru, BKK, dan Bank Mini sekolah, akses didistribusikan ke Router RG-EW300N demi mengamankan alur data administrasi guru dari traffic siswa.</p></div>`,
+
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-8 uppercase font-scifi tracking-widest">6. Analisis Kabel Belden Cat6</h2><div class="flex gap-12 items-center px-12"><p class="text-xl leading-relaxed text-gray-300 text-justify font-tech">Luas sekolah 0.6 hektar mewajibkan penggunaan 5 Roll (1.500m) Kabel Belden standar USA. Pemilihan tembaga murni bertujuan meminimalisasi Crosstalk dan Loss Speed. Ditarik aman melewati pipa conduit plafon agar transmisi 1 Gbps tetap menyala sempurna dari server pusat ke gedung-gedung terjauh.</p><img src="https://files.catbox.moe/jd0rz8.png" class="ppt-image"></div>`,
+
+            `<h2 class="text-4xl font-bold text-cyan-400 mb-10 uppercase font-scifi tracking-widest text-center">Topologi Pohon & Cloud</h2><div class="grid grid-cols-3 gap-8 w-full px-12"><div class="bg-black/50 p-8 rounded-3xl border border-cyan-500/20 text-center"><i class="fas fa-sitemap text-4xl text-cyan-400 mb-6"></i><h4 class="text-white font-bold mb-4 uppercase text-xs">Pohon Bertingkat</h4><p class="text-xs text-gray-400 font-tech">Memecah jalur secara terpusat. Error satu gedung takkan melumpuhkan gedung lain.</p></div><div class="bg-black/50 p-8 rounded-3xl border border-cyan-500/20 text-center"><i class="fas fa-mobile-button text-4xl text-cyan-400 mb-6"></i><h4 class="text-white font-bold mb-4 uppercase text-xs">Aplikasi Ruijie Cloud</h4><p class="text-xs text-gray-400 font-tech">Memantau beban jaringan dan masalah hardware secara jarak jauh via HP Admin.</p></div><div class="bg-black/50 p-8 rounded-3xl border border-cyan-500/20 text-center"><i class="fas fa-shield-halved text-4xl text-cyan-400 mb-6"></i><h4 class="text-white font-bold mb-4 uppercase text-xs">Skalabilitas Tinggi</h4><p class="text-xs text-gray-400 font-tech">Pemasangan Lab baru hanya butuh sambungan switch distribusi tanpa rubah pusat.</p></div></div>`,
+
+            `<h2 class="text-5xl font-bold text-cyan-400 mb-10 uppercase font-scifi tracking-widest">Kesimpulan Proyek</h2><div class="bg-blue-900/10 p-12 rounded-[3rem] border-2 border-cyan-500/20 w-full shadow-2xl"><p class="text-2xl text-gray-300 font-tech leading-relaxed text-justify">Anggaran dan pemilihan perangkat ini telah disusun dengan sangat matang menggunakan ekosistem Ruijie/Reyee. Implementasi Topologi Pohon dengan memusatkan tenaga data di Core Level dan membaginya ke router di tiap kelas serta AP di area publik, menjamin kestabilan internet SMK PGRI 1 Giri meski diakses oleh ribuan siswa secara serentak.</p></div>`,
+            
+            `<h2 class="text-5xl font-bold text-cyan-400 mb-10 uppercase font-scifi tracking-widest">Dokumen Hasil Kerja</h2><div class="flex flex-col items-center justify-center space-y-8 mt-8"><i class="fas fa-folder-open text-9xl text-cyan-400 drop-shadow-[0_0_20px_cyan] mb-4"></i><p class="text-3xl text-gray-200 font-tech">Seluruh rincian anggaran, desain topologi, dan laporan lengkap telah kami dokumentasikan.</p><div class="bg-cyan-500/20 border-2 border-cyan-400 p-6 rounded-2xl"><p class="text-xl text-cyan-300 font-scifi tracking-widest">TERSEDIA DI GOOGLE DRIVE KELOMPOK SRZM</p></div></div>`,
+
+            `<img src="https://iili.io/qKhtL67.jpg" class="w-64 h-64 rounded-full border-4 border-cyan-400 mb-12 shadow-[0_0_100px_#06B6D4]"><h1 class="text-7xl font-scifi font-bold text-white uppercase tracking-widest mb-6 drop-shadow-[0_0_15px_cyan]">Terima Kasih</h1><p class="text-cyan-400 font-tech text-3xl tracking-[1em] uppercase">Sistem SRZM Offline © 2026</p>`
+        ];
+
+        function renderSlide(dir = 'next') {
+            const a = document.getElementById('ppt-slide-area'), cl = dir === 'next' ? 'slide-next' : 'slide-prev';
+            a.innerHTML = `<div class="${cl} w-full flex flex-col items-center">${pptSlides[currentSlide]}</div>`;
+        }
+        function nextSlide(e) { if(e) e.stopPropagation(); if(currentSlide < pptSlides.length -1) { currentSlide++; renderSlide('next'); } }
+        function prevSlide(e) { if(e) e.stopPropagation(); if(currentSlide > 0) { currentSlide--; renderSlide('prev'); } }
+
+        function toggleCurtainLaptop() {
+            isCurtainClosed = !isCurtainClosed;
+            document.body.classList.toggle('curtain-open', !isCurtainClosed);
+            const audio = document.getElementById('sfx-curtain'); audio.currentTime = 0; audio.play().catch(()=>{});
+        }
+
+        function pptScreenClick() { if(isCurtainClosed) toggleCurtainLaptop(); }
+        
+        // Manual Keyboard Nav
+        window.addEventListener('keydown', (e) => { 
+            if(!document.getElementById('ppt-container').classList.contains('hidden')) { 
+                if(e.code === 'Space') { e.preventDefault(); if(isCurtainClosed) toggleCurtainLaptop(); }
+                if(e.code === 'ArrowRight') { nextSlide(); }
+                if(e.code === 'ArrowLeft') { prevSlide(); }
+            } 
+        });
+
+        function exitPPTMode() { try { if(document.exitFullscreen) document.exitFullscreen(); } catch(e){} location.reload(); }
+
+        function initHostRemote(event) {
+            if(event) event.stopPropagation();
+            const code = 'SRZM-' + Math.floor(1000 + Math.random() * 9000);
+            peer = new Peer(code);
+            peer.on('open', id => { 
+                const btnDesk = document.getElementById('btn-host-remote');
+                if(btnDesk) btnDesk.classList.add('hidden'); 
+                const btnMob = document.getElementById('btn-host-remote-mobile');
+                if(btnMob) btnMob.classList.add('hidden');
+
+                const display = document.getElementById('host-id-display');
+                if(display) {
+                    display.classList.remove('hidden'); 
+                    display.classList.add('flex');
+                }
+                document.getElementById('host-code-txt').textContent = id; 
+            });
+            peer.on('connection', c => {
+                conn = c; document.getElementById('host-code-txt').textContent = "LINKED"; toggleMicPC(false);
+                c.on('data', data => {
+                    if(data.startsWith('VOICE:')) { processVoiceCommand(data.split(':')[1]); }
+                    else if(data === 'NEXT') nextSlide(); else if(data === 'PREV') prevSlide();
+                    else if(data === 'TIRAI') toggleCurtainLaptop(); else if(data === 'CLAP') document.getElementById('sfx-clap').play();
+                    else if(data === 'WOW') document.getElementById('sfx-wow').play(); else if(data === 'BGM') toggleMusic();
+                });
+            });
+        }
+
+        function openRemoteSetup() { document.getElementById('remote-setup-page').classList.remove('hidden'); }
+        function closeRemoteSetup() { document.getElementById('remote-setup-page').classList.add('hidden'); }
+
+        function connectToHost() {
+            const d = document.getElementById('remote-input-digits').value;
+            if(!d || d.length < 4) return;
+            peer = new Peer();
+            peer.on('open', () => {
+                conn = peer.connect('SRZM-' + d);
+                conn.on('open', () => {
+                    isRemoteMode = true; document.getElementById('remote-setup-page').classList.add('hidden');
+                    document.getElementById('remote-controller-page').classList.remove('hidden');
+                });
+            });
+        }
+
+        function sendCmd(cmd) { if(conn && conn.open) { conn.send(cmd); if(navigator.vibrate) navigator.vibrate(50); } }
+
+        function toggleSpecialButtons() {
+            isSpecialActive = !isSpecialActive;
+            const nav = document.getElementById('nav-container'), spec = document.getElementById('special-functions');
+            if(isSpecialActive) { nav.classList.replace('flex-1', 'h-32'); spec.classList.remove('h-0', 'opacity-0'); spec.classList.add('h-auto', 'opacity-100', 'mt-4'); }
+            else { nav.classList.replace('h-32', 'flex-1'); spec.classList.add('h-0', 'opacity-0'); spec.classList.remove('h-auto', 'opacity-100', 'mt-4'); }
+        }
+
+        let isRemoteMicActive = false;
+        function toggleRemoteMic() {
+            if(!recognition) return;
+            const btn = document.getElementById('btn-remote-mic');
+            if(!isRemoteMicActive) { try{ recognition.start(); } catch(e){} isRemoteMicActive = true; btn.classList.replace('bg-purple-600/10', 'bg-red-600'); }
+            else { try{ recognition.stop(); } catch(e){} isRemoteMicActive = false; btn.classList.replace('bg-red-600', 'bg-purple-600/10'); }
+        }
+
+        function closeCodePrompt() { document.getElementById('code-prompt-overlay').classList.add('hidden'); }
+    </script>
+</body>
+</html>
